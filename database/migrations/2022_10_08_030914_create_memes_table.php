@@ -15,8 +15,12 @@ return new class extends Migration
     {
         Schema::create('memes', function (Blueprint $table) {
             $table->id();
-            $table->string('path');
+            $table->string('path', 1024);
             $table->string('md5', 32);
+            $table->longText('text');
+            $table->float('scan_duration');
+            $table->index(['md5']);
+            $table->index(['path']);
             $table->timestamps();
         });
     }

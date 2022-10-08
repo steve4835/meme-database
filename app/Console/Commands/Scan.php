@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Console\Commands;
-
+use App\Models\Meme;
 use Illuminate\Console\Command;
 
 class Scan extends Command
@@ -34,10 +34,24 @@ class Scan extends Command
             if(is_dir($fullPath)) {
                 //TODO: recurse
             } else {
-                $md5 = md5_file($fullPath);
                 $s=microtime(true);
-                dd($md5);
-                $e=microtime(false);
+                $md5 = md5_file($fullPath);
+                if(Meme::where('md5', $md5)->exists()) {
+                    continue;
+                }
+                $text = [];
+                exec("tesseract {$fullPath} stdout quiet", $text);
+                $text = array_filter($text);
+                $text = join(" ", $text);
+                $text = str_replace('|', 'I', $text);
+                $e=microtime(true);
+                Meme::unguard();
+                $meme = Meme::create([
+                    'md5' => $md5,
+                    'path' => $fullPath,
+                    'text' => $text,
+                    'scan_duration' => $e - $s
+                ]);
             }
         }
         return Command::SUCCESS;
